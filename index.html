@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>WhatWatch</title>
+  <script
+  src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+  integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI="
+  crossorigin="anonymous"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+</head>
+<style>
+  body{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    height: 100vh;
+    background-color: rgb(27, 27, 27);
+  }
+  #div-body{
+    display: flex;
+    flex-direction: column ;
+    justify-content: center;
+    align-items: center;
+  }
+  #buttons{
+    margin-top: 15px;
+  }
+  button{
+    border-radius: 5px;
+    padding: 5px;
+  }
+  .senha-blur{
+    filter: blur(0.2rem);
+  }
+  .coluna{
+    text-align: center;
+  }
+  form {
+  margin: 0 auto;
+  width: 400px;
+  padding: 1em;
+  border: 1px solid #CCC;
+  border-radius: 1em;
+  background-color: rgb(232, 51, 51);
+  }
+  li{
+    display: flex;
+    margin: 7px 0px;
+  }
+
+  .form-input{
+    border-radius: 10px;
+    margin-left: 5px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  form li + li {
+    margin-top: 1em;
+  }
+
+  label {
+
+    display: inline-block;
+    width: 90px;
+    text-align: right;
+  }
+
+  input{
+    font: 1em sans-serif;
+    box-sizing: border-box;
+    border: 1px solid #999;
+  }
+
+  input:focus{
+    border-color: #000;
+  }
+
+  table{
+    background-color: #999;
+  }
+
+  #usuarios_wrapper{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+</style>
+<body onload="init()">
+  <div id="div-body">
+    <form>
+      <ul>
+        <li>
+          <label for="nome">Nome:</label><br>
+          <input type="text" id="nome" name="nome" class="form-input"><br>
+        </li>
+      </ul>
+      <ul>
+        <li>
+          <label for="login">Login:</label><br>
+          <input type="text" id="login" name="nome" class="form-input"><br>
+        </li>
+      </ul>
+      <ul>
+        <li>
+          <label for="email">Email:</label><br>
+          <input type="email" id="email" name="email" class="form-input"><br>
+        </li>
+      </ul>
+      <ul>
+        <li>
+          <label for="senha">Senha:</label><br>
+          <input type="password" id="senha" name="senha" class="form-input">
+        </li>
+      </ul>
+    </form>
+    <div id="buttons">
+      <button onclick="addNewUser()">Criar</button>
+      <button onclick="deleteUserIndex()">Deletar</button>
+      <button onclick="limparInfo()">Limpar</button>
+      <button onclick="changeUserIndex()">Mudar</button>
+    </div>
+  </div>
+    <table id="usuarios" class="display" class="stripe">
+      <thead>
+        <tr>
+          <th> Nome </th>
+          <th> Login </th>
+          <th> Email </th>
+          <th> Senha </senha> 
+        </tr>
+      </thead>
+      <tbody id="content">
+      </tbody> 
+    </table>  
+  <script src="./crud.js"></script>
+</body>
+<script>
+
+    let button = $('#sumbit');
+    let input = $('input');
+
+    function exibeContatos(){
+      $("#content").html("");
+      let Storagelocal = JSON.parse(localStorage.getItem('usuarios'));
+      for(let i = 0; i < Storagelocal.usuarios.length; i++ ){
+          $("#content").append(`
+              <tr> 
+                <td class="coluna">${Storagelocal.usuarios[i].nome}</td>
+                <td class="coluna">${Storagelocal.usuarios[i].login}</td>
+                <td class="coluna">${Storagelocal.usuarios[i].email}</td>
+                <td class="senha-blur coluna">${Storagelocal.usuarios[i].senha}</td>
+              </tr>
+          `)
+      }
+    }
+
+    function init(){
+        if(localStorage.getItem('usuarios') == null){
+            localStorage.setItem('usuarios', JSON.stringify(dados));
+            exibeContatos()
+            $(document).ready( function () {
+                $('#usuarios').DataTable({
+                "lengthMenu": [ 5],
+                "bLengthChange": false, 
+                info: false,
+                responsive: true,
+                "searching": false
+              });
+            } );
+        }else{
+          exibeContatos()
+          $(document).ready( function () {
+              $('#usuarios').DataTable({
+                "lengthMenu": [ 5],
+                "bLengthChange": false, 
+                info: false,
+                responsive: true,
+                "searching": false
+              });
+          } );
+        }
+    }
+
+    $("#usuarios tbody").on("click", "tr", function(){
+      let infoUser = $(this).find("td");
+      
+      $("#nome").val(infoUser[0].innerHTML);
+      $("#login").val(infoUser[1].innerHTML);
+      $("#email").val(infoUser[2].innerHTML);
+      $("#senha").val(infoUser[3].innerHTML);
+
+      $("#login").attr('disabled', 'disabled');
+
+    })
+
+    function limparInfo(){
+      $("#nome").val('');
+      $("#login").val('');
+      $("#email").val('');
+      $("#senha").val('');
+    }
+
+    function addNewUser(){
+      if(pickUpUser($("#login").val()) == 0){
+        addUser($("#login").val(),$("#senha").val() , $("#nome").val(),$("#email").val() );
+        limparInfo();
+      }else{
+        alert("Já existe esse usuário");
+      }
+      
+    }
+
+    function changeUserIndex(){
+      if(pickUpUser($("#login").val()) == '' || pickUpUser($("#login").val()) == 0){
+        alert("Nenhum usuário com esse login");
+      }else{
+        changeUser($("#login").val(), $("#login").val(),$("#senha").val() , $("#nome").val(),$("#email").val());
+        limparInfo();
+        alert("Mudança Efetuada");
+      }
+
+    }
+
+    function deleteUserIndex(){
+      if(pickUpUser($("#login").val()) == '' || pickUpUser($("#login").val()) == 0){
+        alert("Nenhum usuario com esse login");
+      }else{
+        deleteUser($("#login").val());
+        limparInfo();
+        alert("Deletado com sucesso");
+      }
+    }
+
+
+  
+</script>
+</html>
